@@ -15,12 +15,14 @@ def get_features():
     X.set_index('ID', inplace=True)
     print('data shape after removing duplicates and setting ID', X.shape)
     X = X.loc[X['CNT_CHILDREN'] <= 5]
-    X['FLAG_EMPLOYED'] = (X['DAYS_EMPLOYED']<0).astype(str)
-    X.loc[X['DAYS_EMPLOYED']>=0, 'DAYS_EMPLOYED'] = X.loc[X['DAYS_EMPLOYED']<0, 'DAYS_EMPLOYED'].mean()
+    X['FLAG_EMPLOYED'] = X['DAYS_EMPLOYED']<0
+    X.loc[~X['FLAG_EMPLOYED'], 'DAYS_EMPLOYED'] = X.loc[X['FLAG_EMPLOYED'], 'DAYS_EMPLOYED'].mean()
     print('data shape after removing outliers and adding indicators', X.shape)
     X['DAYS_EMPLOYED'] = X['DAYS_EMPLOYED'].map(lambda days: np.log(-days))
     X['AMT_INCOME_TOTAL'] = X['AMT_INCOME_TOTAL'].map(np.log10)
     X['OCCUPATION_TYPE'].fillna('Unknown', inplace=True)
+    F = X.columns.str.startswith('FLAG_') & (X.dtypes != object)
+    X.loc[:, F] = X.loc[:, F].astype(str)
     return X
 
 def get_labels(defaults=['1','2','3','4','5']):
